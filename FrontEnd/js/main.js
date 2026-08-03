@@ -1,4 +1,5 @@
 import { getCategories, getWorks } from "./api.js";
+import { initModal, openModal } from "./modal.js";
 
 const gallery = document.querySelector(".gallery");
 const filters = document.querySelector(".filters");
@@ -140,6 +141,11 @@ async function init() {
     allWorks = works;
     displayWorks(allWorks);
 
+    initModal(allWorks, (updatedWorks) => {
+      allWorks = updatedWorks;
+      displayWorks(allWorks);
+    });
+
     const token = sessionStorage.getItem("token");
     if (token) {
       enableAdminMode();
@@ -150,5 +156,10 @@ async function init() {
     console.error(error);
   }
 }
+
+editLink.addEventListener("click", (event) => {
+  event.preventDefault();
+  openModal();
+});
 
 init();

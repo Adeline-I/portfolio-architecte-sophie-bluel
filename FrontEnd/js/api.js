@@ -46,4 +46,23 @@ async function login(email, password) {
   return response.json();
 }
 
-export { API_URL, getCategories, getWorks, login };
+/**
+ * Deletes a work by id from the API.
+ * @param {number} id - The id of the work to delete.
+ * @param {string} token - The bearer token of the authenticated user.
+ * @returns {Promise<void>}
+ */
+async function deleteWork(id, token) {
+  const response = await fetch(`${API_URL}/works/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to delete work");
+  }
+}
+
+export { API_URL, deleteWork, getCategories, getWorks, login };
