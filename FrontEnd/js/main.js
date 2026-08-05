@@ -141,7 +141,7 @@ async function init() {
     allWorks = works;
     displayWorks(allWorks);
 
-    initModal(allWorks, (updatedWorks) => {
+    initModal(allWorks, categories, (updatedWorks) => {
       allWorks = updatedWorks;
       displayWorks(allWorks);
     });

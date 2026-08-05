@@ -65,4 +65,26 @@ async function deleteWork(id, token) {
   }
 }
 
-export { API_URL, deleteWork, getCategories, getWorks, login };
+/**
+ * Sends a new work to the API.
+ * @param {FormData} formData - The form data containing image, title and category.
+ * @param {string} token - The bearer token of the authenticated user.
+ * @returns {Promise<Object>} The created work object.
+ */
+async function addWork(formData, token) {
+  const response = await fetch(`${API_URL}/works`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to add work");
+  }
+
+  return response.json();
+}
+
+export { addWork, API_URL, deleteWork, getCategories, getWorks, login };

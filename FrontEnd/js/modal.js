@@ -1,36 +1,93 @@
-import { deleteWork } from "./api.js";
+import { addWork, deleteWork } from "./api.js";
 
 const modalOverlay = document.getElementById("modal-overlay");
 const modalClose = document.getElementById("modal-close");
+const modalBack = document.getElementById("modal-back");
 const modalGallery = document.getElementById("modal-gallery");
+const modalViewGallery = document.getElementById("modal-view-gallery");
+const modalViewAdd = document.getElementById("modal-view-add");
+const modalAddBtn = document.getElementById("modal-add-btn");
+
+const addWorkForm = document.getElementById("add-work-form");
+const imageInput = document.getElementById("image-input");
+const uploadPlaceholder = document.getElementById("upload-placeholder");
+const uploadPreview = document.getElementById("upload-preview");
+const workTitleInput = document.getElementById("work-title");
+const workCategorySelect = document.getElementById("work-category");
+const validateBtn = document.getElementById("modal-validate-btn");
+const uploadError = document.getElementById("upload-error");
+const uploadSuccess = document.getElementById("upload-success");
 
 let works = [];
 let onWorksChange = () => {};
 
 /**
- * Initializes the modal with the current works and a callback to notify
- * the main page when the works list changes (e.g. after a deletion).
+ * Initializes the modal with the current works, categories and a callback
+ * to notify the main page when the works list changes.
  * @param {Array} initialWorks - The current list of works.
+ * @param {Array} categories - The list of categories for the select field.
  * @param {Function} onChangeCallback - Called with the updated works array.
  */
-function initModal(initialWorks, onChangeCallback) {
+function initModal(initialWorks, categories, onChangeCallback) {
   works = initialWorks;
   onWorksChange = onChangeCallback;
+  displayCategoryOptions(categories);
 }
 
 /**
- * Opens the modal and renders the gallery view.
+ * Renders the category <option> elements in the select field.
+ * @param {Array} categories - The categories fetched from the API.
+ */
+function displayCategoryOptions(categories) {
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "";
+  defaultOption.textContent = "";
+  defaultOption.disabled = true;
+  defaultOption.hidden = true;
+  defaultOption.selected = true;
+  workCategorySelect.appendChild(defaultOption);
+
+  categories.forEach((category) => {
+    const option = document.createElement("option");
+    option.value = category.id;
+    option.textContent = category.name;
+    workCategorySelect.appendChild(option);
+  });
+}
+
+/**
+ * Shows the "Galerie photo" view and hides the "Ajout photo" view.
+ */
+function showGalleryView() {
+  modalViewGallery.classList.remove("hidden");
+  modalViewAdd.classList.add("hidden");
+  modalBack.classList.add("hidden");
+}
+
+/**
+ * Shows the "Ajout photo" view and hides the "Galerie photo" view.
+ */
+function showAddView() {
+  modalViewAdd.classList.remove("hidden");
+  modalViewGallery.classList.add("hidden");
+  modalBack.classList.remove("hidden");
+}
+
+/**
+ * Opens the modal, always starting on the gallery view.
  */
 function openModal() {
   displayModalGallery();
+  showGalleryView();
   modalOverlay.classList.remove("hidden");
 }
 
 /**
- * Closes the modal.
+ * Closes the modal and resets the add work form.
  */
 function closeModal() {
   modalOverlay.classList.add("hidden");
+  resetAddForm();
 }
 
 /**
@@ -88,6 +145,98 @@ async function handleDeleteWork(id, thumbnailElement) {
   }
 }
 
+/**
+ * Displays the selected image as a preview in the upload zone.
+ * @param {File} file - The selected image file.
+ */
+function displayImagePreview(file) {
+  uploadPreview.src = URL.createObjectURL(file);
+  uploadPreview.classList.remove("hidden");
+  uploadPlaceholder.classList.add("hidden");
+}
+
+/**
+ * Handles the image input change: validates the file size and shows a preview,
+ * or displays an error message if the file is too large.
+ */
+function handleImageChange() {
+  const file = imageInput.files[0];
+  if (!file) {
+    return;
+  }
+
+  uploadSuccess.classList.add("hidden");
+
+  const allowedTypes = ["image/jpeg", "image/png"];
+  if (!allowedTypes.includes(file.type)) {
+    uploadError.textContent = "Seuls les fichiers jpg et png sont acceptés.";
+    uploadError.classList.remove("hidden");
+    imageInput.value = "";
+    return;
+  }
+
+  const maxSize = 4 * 1024 * 1024;
+  if (file.size > maxSize) {
+    uploadError.textContent = "L'image ne doit pas dépasser 4 Mo.";
+    uploadError.classList.remove("hidden");
+    imageInput.value = "";
+    return;
+  }
+
+  uploadError.classList.add("hidden");
+  displayImagePreview(file);
+  checkFormValidity();
+}
+
+/**
+ * Enables the validate button only if image, title and category are all filled.
+ */
+function checkFormValidity() {
+  const hasImage = imageInput.files.length > 0;
+  const hasTitle = workTitleInput.value.trim() !== "";
+  const hasCategory = workCategorySelect.value !== "";
+
+  validateBtn.disabled = !(hasImage && hasTitle && hasCategory);
+}
+
+/**
+ * Resets the add work form to its initial empty state.
+ */
+function resetAddForm() {
+  addWorkForm.reset();
+  uploadPreview.classList.add("hidden");
+  uploadPlaceholder.classList.remove("hidden");
+  uploadError.classList.add("hidden");
+  uploadSuccess.classList.add("hidden");
+  validateBtn.disabled = true;
+}
+
+/**
+ * Handles the add work form submission: sends the FormData to the API,
+ * updates the galleries, resets the form, and returns to the gallery view.
+ * @param {SubmitEvent} event - The form submit event.
+ */
+async function handleAddWork(event) {
+  event.preventDefault();
+
+  try {
+    const token = sessionStorage.getItem("token");
+    const formData = new FormData(addWorkForm);
+    const newWork = await addWork(formData, token);
+
+    works.push(newWork);
+    modalGallery.appendChild(createModalThumbnail(newWork));
+    onWorksChange(works);
+
+    resetAddForm();
+    uploadSuccess.classList.remove("hidden");
+  } catch (error) {
+    console.error(error);
+    uploadError.textContent = "Une erreur est survenue, veuillez réessayer.";
+    uploadError.classList.remove("hidden");
+  }
+}
+
 modalClose.addEventListener("click", closeModal);
 
 modalOverlay.addEventListener("click", (event) => {
@@ -95,5 +244,13 @@ modalOverlay.addEventListener("click", (event) => {
     closeModal();
   }
 });
+
+modalAddBtn.addEventListener("click", showAddView);
+modalBack.addEventListener("click", showGalleryView);
+
+imageInput.addEventListener("change", handleImageChange);
+workTitleInput.addEventListener("input", checkFormValidity);
+workCategorySelect.addEventListener("change", checkFormValidity);
+addWorkForm.addEventListener("submit", handleAddWork);
 
 export { initModal, openModal };
