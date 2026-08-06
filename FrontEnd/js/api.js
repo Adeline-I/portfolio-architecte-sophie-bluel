@@ -87,4 +87,4 @@ async function addWork(formData, token) {
   return response.json();
 }
 
-export { addWork, API_URL, deleteWork, getCategories, getWorks, login };
+export { addWork, deleteWork, getCategories, getWorks, login };

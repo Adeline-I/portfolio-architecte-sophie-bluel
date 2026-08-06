@@ -22,6 +22,15 @@ let works = [];
 let onWorksChange = () => {};
 
 /**
+ * Displays an error message in the upload zone.
+ * @param {string} message - The error message to display.
+ */
+function showUploadError(message) {
+  uploadError.textContent = message;
+  uploadError.classList.remove("hidden");
+}
+
+/**
  * Initializes the modal with the current works, categories and a callback
  * to notify the main page when the works list changes.
  * @param {Array} initialWorks - The current list of works.
@@ -173,16 +182,14 @@ function handleImageChange() {
 
   const allowedTypes = ["image/jpeg", "image/png"];
   if (!allowedTypes.includes(file.type)) {
-    uploadError.textContent = "Seuls les fichiers jpg et png sont acceptés.";
-    uploadError.classList.remove("hidden");
+    showUploadError("Seuls les fichiers jpg et png sont acceptés.");
     imageInput.value = "";
     return;
   }
 
   const maxSize = 4 * 1024 * 1024;
   if (file.size > maxSize) {
-    uploadError.textContent = "L'image ne doit pas dépasser 4 Mo.";
-    uploadError.classList.remove("hidden");
+    showUploadError("L'image ne doit pas dépasser 4 Mo.");
     imageInput.value = "";
     return;
   }
@@ -241,8 +248,7 @@ async function handleAddWork(event) {
     uploadSuccess.classList.remove("hidden");
   } catch (error) {
     console.error(error);
-    uploadError.textContent = "Une erreur est survenue, veuillez réessayer.";
-    uploadError.classList.remove("hidden");
+    showUploadError("Une erreur est survenue, veuillez réessayer.");
   }
 }
 
@@ -255,7 +261,10 @@ modalOverlay.addEventListener("click", (event) => {
 });
 
 modalAddBtn.addEventListener("click", showAddView);
-modalBack.addEventListener("click", showGalleryView);
+modalBack.addEventListener("click", () => {
+  showGalleryView();
+  resetAddForm();
+});
 
 imageInput.addEventListener("change", handleImageChange);
 workTitleInput.addEventListener("input", checkFormValidity);
