@@ -19,8 +19,8 @@ async function handleLoginSubmit(event) {
     sessionStorage.setItem("token", token);
     window.location.href = "./index.html";
   } catch (error) {
-    errorMessage.textContent = "Erreur dans l'identifiant ou le mot de passe";
-    errorMessage.style.display = "block";
+    errorMessage.textContent = "Erreur dans l'identifiant ou le mot de passe.";
+    errorMessage.classList.remove("hidden");
   }
 }
 
