@@ -11,7 +11,7 @@ const modalAddBtn = document.getElementById("modal-add-btn");
 const addWorkForm = document.getElementById("add-work-form");
 const imageInput = document.getElementById("image-input");
 const uploadPlaceholder = document.getElementById("upload-placeholder");
-const uploadPreview = document.getElementById("upload-preview");
+const uploadZone = document.getElementById("upload-zone");
 const workTitleInput = document.getElementById("work-title");
 const workCategorySelect = document.getElementById("work-category");
 const validateBtn = document.getElementById("modal-validate-btn");
@@ -44,7 +44,7 @@ function displayCategoryOptions(categories) {
   defaultOption.textContent = "";
   defaultOption.disabled = true;
   defaultOption.hidden = true;
-  defaultOption.selected = true;
+  defaultOption.setAttribute("selected", "");
   workCategorySelect.appendChild(defaultOption);
 
   categories.forEach((category) => {
@@ -150,8 +150,12 @@ async function handleDeleteWork(id, thumbnailElement) {
  * @param {File} file - The selected image file.
  */
 function displayImagePreview(file) {
-  uploadPreview.src = URL.createObjectURL(file);
-  uploadPreview.classList.remove("hidden");
+  const preview = document.createElement("img");
+  preview.classList.add("upload-preview");
+  preview.src = URL.createObjectURL(file);
+  preview.alt = "";
+
+  uploadZone.appendChild(preview);
   uploadPlaceholder.classList.add("hidden");
 }
 
@@ -204,7 +208,12 @@ function checkFormValidity() {
  */
 function resetAddForm() {
   addWorkForm.reset();
-  uploadPreview.classList.add("hidden");
+
+  const existingPreview = uploadZone.querySelector(".upload-preview");
+  if (existingPreview) {
+    existingPreview.remove();
+  }
+
   uploadPlaceholder.classList.remove("hidden");
   uploadError.classList.add("hidden");
   uploadSuccess.classList.add("hidden");
